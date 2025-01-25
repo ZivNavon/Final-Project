@@ -1,8 +1,19 @@
 #ifndef MENU_H
 #define MENU_H
-#define _CRT_SECURE_NO_WARNINGS
 
-// Menu Function
+// Function Prototypes
 void showMenu(int permissionLevel);
+void handleAdminOptions(int choice);
+void handleEmployeeOptions(int choice);
+void handleTraineeOptions(int choice);
+void addEmployeeOption();
+void addItemOption();
+void viewCustomersOption();
+void addCustomerOption();
+void productSaleOption();
+void productReturnOption();
+void viewCustomerPurchasesOption();
+void viewItemsOption();
+void deleteItemOption();
 
 #endif // MENU_H

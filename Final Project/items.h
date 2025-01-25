@@ -5,7 +5,6 @@
 #define _CRT_SECURE_NO_WARNINGS
 
 
-// Date structure
 typedef struct Date {
     int year;
     int month;
@@ -14,17 +13,18 @@ typedef struct Date {
 
 // Item structure
 typedef struct Item {
-    unsigned long serialNumber;
-    char manufacturer[50];
-    char model[50];
-    float price;
-    int warrantyMonths;
-    bool inStock;
-    int stock;
-    Date launchDate;
-    Date discountEndDate;
-    int discount;
-    struct Item* left, * right;
+    unsigned long serialNumber;    // Unique identifier for the item
+    char manufacturer[50];         // Manufacturer name
+    char model[50];                // Model name
+    float price;                   // Price of the item
+    int warrantyMonths;            // Warranty period in months
+    bool inStock;                  // True if item is in stock
+    bool memberDiscount;           // True if there's a member discount
+    Date launchDate;               // Launch date of the item
+    Date discountEndDate;          // Discount end date
+    int stock;                     // Number of units in stock
+    struct Item* left;             // Pointer to the left child (BST)
+    struct Item* right;            // Pointer to the right child (BST)
 } Item;
 
 // Function prototypes
@@ -33,5 +33,6 @@ Item* searchItem(Item* root, unsigned long serialNumber);
 void printItems(Item* root);
 void saveItemsToFile(Item* root, const char* filename);
 Item* loadItemsFromFile(const char* filename);
+Item* deleteItem(Item* root, unsigned long serialNumber);
 
 #endif // ITEMS_H

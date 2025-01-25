@@ -4,22 +4,19 @@
 
 // Employee structure
 typedef struct Employee {
-    char username[30];
-    char password[30];
-    char firstName[30];
-    int permissionLevel;
-    struct Employee* next;
+    char username[30];      // Username of the employee
+    char password[30];      // Password for login
+    char firstName[30];     // First name of the employee
+    int permissionLevel;    // Permission level: 1 = Admin, 2 = Employee, 3 = Trainee
+    struct Employee* next;  // Pointer to the next employee in the linked list
 } Employee;
 
-// Declare global employee list
-extern Employee* employees;
-
 // Function prototypes
-void loadEmployees();
-void saveEmployees();
-int login();
-void createDefaultAdmin();
 Employee* addEmployee(Employee* list, Employee newEmployee);
-Employee* findEmployee(Employee* list, const char* username, const char* password);
+Employee* searchEmployee(Employee* list, const char* username);
+void saveEmployeesToFile(Employee* list);
+Employee* loadEmployeesFromFile();
+void createDefaultAdmin();
+int login(Employee* employees);
 
 #endif // EMPLOYEES_H

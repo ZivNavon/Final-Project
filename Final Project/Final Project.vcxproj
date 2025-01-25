@@ -130,11 +130,16 @@
     <ClInclude Include="customers.h" />
     <ClInclude Include="employees.h" />
     <ClInclude Include="items.h" />
+    <ClInclude Include="log.h" />
     <ClInclude Include="menu.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="customers.c" />
     <ClCompile Include="employees.c" />
+    <ClCompile Include="items.c" />
+    <ClCompile Include="log.c" />
     <ClCompile Include="main.c" />
+    <ClCompile Include="menu.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
