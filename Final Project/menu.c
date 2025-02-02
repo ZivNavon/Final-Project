@@ -3,6 +3,8 @@
 #include "employees.h"
 #include "items.h"
 #include "customers.h"
+#include <stdlib.h>
+
 #define _CRT_SECURE_NO_WARNINGS
 
 extern Employee* employees;
@@ -26,15 +28,16 @@ void showMenu(int permissionLevel) {
             printf("7. Product Sale\n");
             printf("8. Product Return\n");
             printf("9. View Customer Purchases\n");
+            printf("10. Search Items\n"); // Added search functionality
             printf("0. Exit\n");
         }
-
         else if (permissionLevel == 2) { // Employee menu
             printf("1. View Items\n");
             printf("2. View Customers\n");
             printf("3. Add Customers\n");
             printf("4. Product Sale\n");
             printf("5. View Customer Purchases\n");
+            printf("6. Search Items\n"); // Added search functionality
             printf("0. Exit\n");
         }
         else if (permissionLevel == 3) { // Trainee menu
@@ -49,10 +52,12 @@ void showMenu(int permissionLevel) {
 
         switch (permissionLevel) {
         case 1: // Admin options
-            handleAdminOptions(choice);
+            if (choice == 10) searchItems(items); // Ensure items is accessible
+            else handleAdminOptions(choice);
             break;
         case 2: // Employee options
-            handleEmployeeOptions(choice);
+            if (choice == 6) searchItems(items); // Ensure items is accessible
+            else handleEmployeeOptions(choice);
             break;
         case 3: // Trainee options
             handleTraineeOptions(choice);
@@ -94,6 +99,9 @@ void handleAdminOptions(int choice) {
     case 9:
         viewCustomerPurchasesOption();
         break;
+    case 10:
+        searchItems(items);
+        break;
     case 0:
         printf("Exiting...\n");
         break;
@@ -120,6 +128,9 @@ void handleEmployeeOptions(int choice) {
     case 5:
         viewCustomerPurchasesOption();
         break;
+    case 6:
+        searchItems(items);
+        break;
     case 0:
         printf("Exiting...\n");
         break;
@@ -128,7 +139,7 @@ void handleEmployeeOptions(int choice) {
     }
 }
 
-
+// Handle Trainee Menu Options
 void handleTraineeOptions(int choice) {
     switch (choice) {
     case 1:
@@ -320,8 +331,8 @@ void addCustomerOption() {
     printf("Full Name: ");
     scanf(" %[^\n]s", newCustomer.fullName);
 
-    printf("Joining Date (YYYY MM DD): ");
-    scanf("%d %d %d", &newCustomer.joinDate.year, &newCustomer.joinDate.month, &newCustomer.joinDate.day);
+    printf("Joining Date (DD MM YEAR): ");
+    scanf("%d %d %d", &newCustomer.joinDate.day, &newCustomer.joinDate.month, &newCustomer.joinDate.year);
 
     newCustomer.totalPurchased = 0.0;
     newCustomer.purchaseHistory = NULL;
@@ -482,3 +493,4 @@ void deleteItemOption() {
 
     printf("Item with serial number %lu deleted successfully.\n", serialNumber);
 }
+

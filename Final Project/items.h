@@ -34,5 +34,6 @@ void printItems(Item* root);
 void saveItemsToFile(Item* root, const char* filename);
 Item* loadItemsFromFile(const char* filename);
 Item* deleteItem(Item* root, unsigned long serialNumber);
+void searchItems(Item* root);
 
 #endif // ITEMS_H

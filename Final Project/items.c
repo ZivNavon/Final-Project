@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
+
 #define _CRT_SECURE_NO_WARNINGS
 
 // Add Item to Binary Search Tree
@@ -139,4 +141,146 @@ Item* deleteItem(Item* root, unsigned long serialNumber) {
     }
 
     return root;
+}
+
+time_t dateToTimeT(Date date) {
+    struct tm tm = { 0 };
+    tm.tm_year = date.year - 1900;
+    tm.tm_mon = date.month - 1;
+    tm.tm_mday = date.day;
+    return mktime(&tm);
+}
+
+// Helper: Parse a DD-MM-YYYY string into a Date struct
+Date parseDate(const char* dateStr) {
+    Date date;
+    sscanf(dateStr, "%4d-%2d-%2d", &date.day, &date.month, &date.year);
+    return date;
+}
+
+// Match item based on criteria
+int matchItem(const Item* item, const char* manufacturer, const char* model,
+    float minPrice, float maxPrice, int booleanFilter, int hasFilter,
+    time_t startDate, time_t endDate) {
+    int matches = 1;
+
+    if (manufacturer && strlen(manufacturer) > 0) {
+        matches = matches && (strstr(item->manufacturer, manufacturer) != NULL);
+    }
+    if (model && strlen(model) > 0) {
+        matches = matches && (strstr(item->model, model) != NULL);
+    }
+    if (minPrice >= 0) {
+        matches = matches && (item->price >= minPrice);
+    }
+    if (maxPrice >= 0) {
+        matches = matches && (item->price <= maxPrice);
+    }
+    if (hasFilter) {
+        matches = matches && (item->memberDiscount == booleanFilter);
+    }
+    if (startDate > 0) {
+        matches = matches && (dateToTimeT(item->launchDate) >= startDate);
+    }
+    if (endDate > 0) {
+        matches = matches && (dateToTimeT(item->launchDate) <= endDate);
+    }
+
+    return matches;
+}
+
+// Recursive function to search and display items
+void searchAndDisplayItems(Item* root, const char* manufacturer, const char* model,
+    float minPrice, float maxPrice, int booleanFilter, int hasFilter,
+    time_t startDate, time_t endDate) {
+    if (!root) return;
+
+    searchAndDisplayItems(root->left, manufacturer, model, minPrice, maxPrice, booleanFilter, hasFilter, startDate, endDate);
+
+    if (matchItem(root, manufacturer, model, minPrice, maxPrice, booleanFilter, hasFilter, startDate, endDate)) {
+        printf("Serial: %lu | Manufacturer: %s | Model: %s | Price: %.2f | Stock: %d | Launch Date: %d-%02d-%02d\n",
+            root->serialNumber, root->manufacturer, root->model, root->price, root->stock,
+            root->launchDate.year, root->launchDate.month, root->launchDate.day);
+    }
+
+    searchAndDisplayItems(root->right, manufacturer, model, minPrice, maxPrice, booleanFilter, hasFilter, startDate, endDate);
+}
+
+// Main search function
+void searchItems(Item* root) {
+    char manufacturer[50] = "", model[50] = "";
+    float minPrice = -1, maxPrice = -1;
+    int booleanFilter = 0, hasFilter = 0;
+    time_t startDate = 0, endDate = 0;
+
+    int choice;
+    printf("Select search criteria:\n");
+    printf("1. Manufacturer\n");
+    printf("2. Model\n");
+    printf("3. Price range\n");
+    printf("4. Boolean value (Has member discount)\n");
+    printf("5. Launch date range\n");
+    printf("6. Search with all criteria\n");
+    printf("Enter your choice: ");
+    scanf("%d", &choice);
+
+    switch (choice) {
+    case 1:
+        printf("Enter manufacturer: ");
+        scanf("%49s", manufacturer);
+        break;
+    case 2:
+        printf("Enter model: ");
+        scanf("%49s", model);
+        break;
+    case 3:
+        printf("Enter minimum price (or -1 to skip): ");
+        scanf("%f", &minPrice);
+        printf("Enter maximum price (or -1 to skip): ");
+        scanf("%f", &maxPrice);
+        break;
+    case 4:
+        printf("Filter by member discount (1 for yes, 0 for no): ");
+        scanf("%d", &booleanFilter);
+        hasFilter = 1;
+        break;
+    case 5: {
+        char start[11], end[11];
+        printf("Enter start date (YYYY-MM-DD): ");
+        scanf("%10s", start);
+        printf("Enter end date (YYYY-MM-DD): ");
+        scanf("%10s", end);
+
+        startDate = dateToTimeT(parseDate(start));
+        endDate = dateToTimeT(parseDate(end));
+        break;
+    }
+    case 6:
+        printf("Enter manufacturer: ");
+        scanf("%49s", manufacturer);
+        printf("Enter model: ");
+        scanf("%49s", model);
+        printf("Enter minimum price (or -1 to skip): ");
+        scanf("%f", &minPrice);
+        printf("Enter maximum price (or -1 to skip): ");
+        scanf("%f", &maxPrice);
+        printf("Filter by member discount (1 for yes, 0 for no): ");
+        scanf("%d", &booleanFilter);
+        hasFilter = 1;
+        char start[11], end[11];
+        printf("Enter start date (YYYY-MM-DD): ");
+        scanf("%10s", start);
+        printf("Enter end date (YYYY-MM-DD): ");
+        scanf("%10s", end);
+
+        startDate = dateToTimeT(parseDate(start));
+        endDate = dateToTimeT(parseDate(end));
+        break;
+    default:
+        printf("Invalid choice.\n");
+        return;
+    }
+
+    printf("\nMatching items:\n");
+    searchAndDisplayItems(root, manufacturer, model, minPrice, maxPrice, booleanFilter, hasFilter, startDate, endDate);
 }

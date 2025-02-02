@@ -1,8 +1,12 @@
 #ifndef MENU_H
 #define MENU_H
 
+#include "employees.h"
+#include "items.h"
+#include "customers.h"
+
 // Function Prototypes
-void showMenu(int permissionLevel);
+void showMainMenu(Employee* loggedIn, Item** itemsRoot, Customer** customersHead);
 void handleAdminOptions(int choice);
 void handleEmployeeOptions(int choice);
 void handleTraineeOptions(int choice);
