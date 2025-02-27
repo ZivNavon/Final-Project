@@ -9,6 +9,8 @@
 // Purchase Structure
 typedef struct Purchase {
     unsigned long serialNumber;  // Item serial number
+    float price;                 // Store price of item at the time of purchase
+    int quantity;                // Store how many were bought
     Date purchaseDate;           // Purchase date
     struct Purchase* next;       // Pointer to next purchase
 } Purchase;

@@ -6,7 +6,6 @@
 #include "customers.h"
 
 // Function Prototypes
-void showMainMenu(Employee* loggedIn, Item** itemsRoot, Customer** customersHead);
 void handleAdminOptions(int choice);
 void handleEmployeeOptions(int choice);
 void handleTraineeOptions(int choice);

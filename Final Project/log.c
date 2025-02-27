@@ -47,3 +47,4 @@ void logSystemShutdown() {
     fprintf(fp, "[%s] SYSTEM: System shut down.\n", getTimestamp());
     fclose(fp);
 }
+

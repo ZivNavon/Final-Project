@@ -4,12 +4,14 @@
 #include "items.h"
 #include "customers.h"
 #include <stdlib.h>
+#include <time.h>
 
 #define _CRT_SECURE_NO_WARNINGS
 
 extern Employee* employees;
 extern Item* items;
 extern Customer* customers;
+
 
 // Menu Function
 void showMenu(int permissionLevel) {
@@ -159,6 +161,8 @@ void handleTraineeOptions(int choice) {
     }
 }
 
+//functions
+
 void addEmployeeOption() {
     Employee newEmployee;
 
@@ -196,10 +200,11 @@ void addEmployeeOption() {
     // Save employees to file
     saveEmployeesToFile(employees);
 
-    // Log the action
+    //Log the action
     char logMessage[100];
-    snprintf(logMessage, sizeof(logMessage), "Added a new employee: %s", newEmployee.username);
-    logAction("admin", logMessage);
+    snprintf(logMessage, sizeof(logMessage), "Added Employee: %s, Permission Level: %d",
+        newEmployee.username, newEmployee.permissionLevel);
+    logAction("Admin", logMessage);
 
     printf("Employee '%s' added successfully.\n", newEmployee.username);
 }
@@ -224,18 +229,10 @@ void addItemOption() {
         }
 
         printf("Manufacturer (string, max 49 characters, e.g., Nike): ");
-        if (scanf("%49s", newItem.manufacturer) != 1) {
-            printf("Invalid input. Please enter a valid manufacturer name (e.g., Nike).\n");
-            while (getchar() != '\n'); // Clear input buffer
-            continue;
-        }
+        scanf("%49s", newItem.manufacturer);
 
         printf("Model (string, max 49 characters, e.g., AirMax): ");
-        if (scanf("%49s", newItem.model) != 1) {
-            printf("Invalid input. Please enter a valid model name (e.g., AirMax).\n");
-            while (getchar() != '\n'); // Clear input buffer
-            continue;
-        }
+        scanf("%49s", newItem.model);
 
         printf("Price (decimal, e.g., 59.99): ");
         if (scanf("%f", &newItem.price) != 1) {
@@ -283,7 +280,10 @@ void addItemOption() {
         saveItemsToFile(items, "items.dat");
 
         // Log the action
-        logAction("admin", "Added a new item to the inventory");
+        char logMessage[200];
+        snprintf(logMessage, sizeof(logMessage), "Added new item: Serial: %lu, Manufacturer: %s, Model: %s, Price: %.2f, Stock: %d",
+            newItem.serialNumber, newItem.manufacturer, newItem.model, newItem.price, newItem.stock);
+        logAction("admin", logMessage);
 
         printf("\nItem added successfully:\n");
         printf("Serial Number: %lu\n", newItem.serialNumber);
@@ -317,6 +317,8 @@ void viewCustomersOption() {
             current->totalPurchased);
         current = current->next;
     }
+   
+    logAction("admin", "Viewed customers list");
 }
 
 void addCustomerOption() {
@@ -379,23 +381,60 @@ void productSaleOption() {
     printf("Quantity: ");
     scanf("%d", &quantity);
 
+    if (quantity > 3 || quantity <= 0) {
+        printf("Error: Customers can only purchase 1 to 3 items per transaction.\n");
+        return;
+    }
+
     if (item->stock < quantity) {
         printf("Error: Insufficient stock.\n");
         return;
     }
 
-    // Update stock and purchase history
+    // Deduct stock and update customer purchase total
     item->stock -= quantity;
     customer->totalPurchased += item->price * quantity;
+
+    // Store the purchase in customer's history
+    Purchase* newPurchase = (Purchase*)malloc(sizeof(Purchase));
+    if (!newPurchase) {
+        printf("Error: Memory allocation failed.\n");
+        logAction("System", "Memory allocation failed for new purchase.");
+        return;
+    }
+    newPurchase->serialNumber = serialNumber;
+    newPurchase->price = item->price;
+    newPurchase->quantity = quantity;  // Assign correct quantity
+
+    // Save the correct purchase date
+    time_t now = time(NULL);
+    struct tm* timeInfo = localtime(&now);
+    newPurchase->purchaseDate.year = timeInfo->tm_year + 1900;
+    newPurchase->purchaseDate.month = timeInfo->tm_mon + 1;
+    newPurchase->purchaseDate.day = timeInfo->tm_mday;
+
+    // Debugging: Print the stored purchase
+    printf("DEBUG: Storing purchase - Serial: %lu, Quantity: %d, Price: %.2f\n",
+        serialNumber, quantity, newPurchase->price);
+    fflush(stdout);
+
+    // Add to customer's purchase history
+    newPurchase->next = customer->purchaseHistory;
+    customer->purchaseHistory = newPurchase;
 
     // Save changes
     saveItemsToFile(items, "items.dat");
     saveCustomersToFile(customers, "customers.txt");
 
-    // Log the action
-    logAction("admin", "Processed a product sale");
+    // Log the purchase
+    char logMessage[200];
+    snprintf(logMessage, sizeof(logMessage),
+        "Purchase - Customer: %lu, Item: %s %s, Quantity: %d, Total Cost: %.2f, Date: %04d-%02d-%02d",
+        customerID, item->manufacturer, item->model, quantity, item->price * quantity,
+        newPurchase->purchaseDate.year, newPurchase->purchaseDate.month, newPurchase->purchaseDate.day);
+    logAction("Sales", logMessage);
 
-    printf("Product sold successfully.\n");
+    printf("Purchase successful.\n");
 }
 
 void productReturnOption() {
@@ -424,16 +463,72 @@ void productReturnOption() {
         return;
     }
 
-    // Return the item (stock adjustment)
-    item->stock++;
-    customer->totalPurchased -= item->price;
+    // Search for the correct purchase in history
+    Purchase* prev = NULL;
+    Purchase* purchase = customer->purchaseHistory;
+    while (purchase && purchase->serialNumber != serialNumber) {
+        prev = purchase;
+        purchase = purchase->next;
+    }
+
+    if (!purchase) {
+        printf("Error: This item was not purchased by the customer.\n");
+        return;
+    }
+
+    // Debugging: Print quantity before proceeding
+    printf("DEBUG: Found purchase - Serial: %lu, Quantity: %d, Price: %.2f\n",
+        purchase->serialNumber, purchase->quantity, purchase->price);
+    fflush(stdout);
+
+    // Check if within return period (14 days)
+    time_t now = time(NULL);
+    struct tm purchaseTime = { 0 };
+    purchaseTime.tm_year = purchase->purchaseDate.year - 1900;
+    purchaseTime.tm_mon = purchase->purchaseDate.month - 1;
+    purchaseTime.tm_mday = purchase->purchaseDate.day;
+
+    time_t purchaseDate = mktime(&purchaseTime);
+    double daysPassed = difftime(now, purchaseDate) / (60 * 60 * 24);
+
+    if (daysPassed > 14) {
+        printf("Error: Return period exceeded (14 days).\n");
+        return;
+    }
+
+    // Double-check if `purchase->quantity` is valid before logging
+    if (purchase->quantity <= 0 || purchase->quantity > 3) {
+        printf("ERROR: Invalid quantity in purchase history! Debugging needed!\n");
+        fflush(stdout);
+        logAction("Returns", "ERROR: Invalid quantity in purchase history.");
+        return;
+    }
+
+    // Process return
+    item->stock += purchase->quantity;
+    customer->totalPurchased -= purchase->price * purchase->quantity;
+
+    // Remove from purchase history
+    int returnedQuantity = purchase->quantity;  // Save before freeing memory
+
+    if (prev) {
+        prev->next = purchase->next;
+    }
+    else {
+        customer->purchaseHistory = purchase->next;
+    }
+    free(purchase);
 
     // Save changes
     saveItemsToFile(items, "items.dat");
     saveCustomersToFile(customers, "customers.txt");
 
-    // Log the action
-    logAction("admin", "Processed a product return");
+    // Log the correct quantity (use `returnedQuantity`)
+    char logMessage[200];
+    snprintf(logMessage, sizeof(logMessage),
+        "Return - Customer: %lu, Item: %s %s, Quantity: %d, Returned within: %.0f days",
+        customerID, item->manufacturer, item->model, returnedQuantity, daysPassed);
+    logAction("Returns", logMessage);
 
     printf("Product returned successfully.\n");
 }
@@ -460,6 +555,9 @@ void viewCustomerPurchasesOption() {
 void viewItemsOption() {
     printf("\n--- View Items ---\n");
     printItems(items);
+
+    //Log the action
+    logAction("admin", "Viewed items list");
 }
 
 void deleteItemOption() {
@@ -487,9 +585,10 @@ void deleteItemOption() {
     saveItemsToFile(items, "items.dat");
 
     // Log the action
-    char logMessage[100];
-    snprintf(logMessage, sizeof(logMessage), "Deleted item with serial number: %lu", serialNumber);
-    logAction("admin", logMessage);
+    char logMessage[200];
+    snprintf(logMessage, sizeof(logMessage), "Deleted Item: Serial: %lu, Manufacturer: %s, Model: %s, Price: %.2f, Stock: %d",
+        item->serialNumber, item->manufacturer, item->model, item->price, item->stock);
+    logAction("Admin", logMessage);
 
     printf("Item with serial number %lu deleted successfully.\n", serialNumber);
 }

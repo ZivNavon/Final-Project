@@ -1,9 +1,11 @@
 // items.c
 #include "items.h"
+#include "log.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+
 
 #define _CRT_SECURE_NO_WARNINGS
 
@@ -13,6 +15,7 @@ Item* addItem(Item* root, Item newItem) {
         Item* node = (Item*)malloc(sizeof(Item));
         if (!node) {
             printf("Error: Memory allocation failed for item.\n");
+            logAction("System", "Error: Memory allocation failed for new item.");
             return NULL;
         }
         *node = newItem;
@@ -158,11 +161,12 @@ Date parseDate(const char* dateStr) {
     return date;
 }
 
-// Match item based on criteria
+// Match item based on criteria of the employe
 int matchItem(const Item* item, const char* manufacturer, const char* model,
     float minPrice, float maxPrice, int booleanFilter, int hasFilter,
     time_t startDate, time_t endDate) {
     int matches = 1;
+    
 
     if (manufacturer && strlen(manufacturer) > 0) {
         matches = matches && (strstr(item->manufacturer, manufacturer) != NULL);
@@ -212,6 +216,7 @@ void searchItems(Item* root) {
     float minPrice = -1, maxPrice = -1;
     int booleanFilter = 0, hasFilter = 0;
     time_t startDate = 0, endDate = 0;
+    char logMessage[300] = "";
 
     int choice;
     printf("Select search criteria:\n");
@@ -228,21 +233,25 @@ void searchItems(Item* root) {
     case 1:
         printf("Enter manufacturer: ");
         scanf("%49s", manufacturer);
+        snprintf(logMessage, sizeof(logMessage), "Search - Manufacturer: %s", manufacturer);
         break;
     case 2:
         printf("Enter model: ");
         scanf("%49s", model);
+        snprintf(logMessage, sizeof(logMessage), "Search - Model: %s", model);
         break;
     case 3:
         printf("Enter minimum price (or -1 to skip): ");
         scanf("%f", &minPrice);
         printf("Enter maximum price (or -1 to skip): ");
         scanf("%f", &maxPrice);
+        snprintf(logMessage, sizeof(logMessage), "Search - Price range: %.2f to %.2f", minPrice, maxPrice);
         break;
     case 4:
         printf("Filter by member discount (1 for yes, 0 for no): ");
         scanf("%d", &booleanFilter);
         hasFilter = 1;
+        snprintf(logMessage, sizeof(logMessage), "Search - Member discount: %s", booleanFilter ? "Yes" : "No");
         break;
     case 5: {
         char start[11], end[11];
@@ -253,6 +262,8 @@ void searchItems(Item* root) {
 
         startDate = dateToTimeT(parseDate(start));
         endDate = dateToTimeT(parseDate(end));
+
+        snprintf(logMessage, sizeof(logMessage), "Search - Date range: %s to %s", start, end);
         break;
     }
     case 6:
@@ -267,6 +278,7 @@ void searchItems(Item* root) {
         printf("Filter by member discount (1 for yes, 0 for no): ");
         scanf("%d", &booleanFilter);
         hasFilter = 1;
+
         char start[11], end[11];
         printf("Enter start date (YYYY-MM-DD): ");
         scanf("%10s", start);
@@ -275,11 +287,24 @@ void searchItems(Item* root) {
 
         startDate = dateToTimeT(parseDate(start));
         endDate = dateToTimeT(parseDate(end));
+
+        snprintf(logMessage, sizeof(logMessage),
+            "Search - Manufacturer: %s, Model: %s, Price: %.2f to %.2f, Member Discount: %s, Date range: %s to %s",
+            manufacturer, model, minPrice, maxPrice, booleanFilter ? "Yes" : "No", start, end);
         break;
     default:
         printf("Invalid choice.\n");
         return;
     }
+
+    //Log the search operation
+    if (strlen(logMessage) > 0 && strcmp(logMessage, "") != 0) {
+        logAction("User", logMessage);
+    }
+    else {
+        logAction("User", "Search operation performed but criteria were not captured correctly.");
+    }
+
 
     printf("\nMatching items:\n");
     searchAndDisplayItems(root, manufacturer, model, minPrice, maxPrice, booleanFilter, hasFilter, startDate, endDate);

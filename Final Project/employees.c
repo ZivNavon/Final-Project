@@ -55,22 +55,27 @@ int login(Employee* employees) {
         if (employee && strcmp(employee->password, password) == 0) {
             printf("Login successful! Welcome, %s.\n", employee->firstName);
 
-            // Log the action
-            logAction(employee->username, "Logged in");
+            //Log successful login
+            char logMessage[100];
+            snprintf(logMessage, sizeof(logMessage), "Successful Login - User: %s", username);
+            logAction(username, logMessage);
 
             return employee->permissionLevel;
         }
 
-        printf("Invalid credentials. Try again.\n");
         attempts++;
+        printf("Invalid username or password. Attempts left: %d\n", 3 - attempts);
+
+        //Log failed login attempt
+        char logMessage[100];
+        snprintf(logMessage, sizeof(logMessage), "Failed Login Attempt - User: %s, Attempt: %d", username, attempts);
+        logAction("System", logMessage);
     }
 
-    printf("Too many failed attempts. Exiting...\n");
-
-    // Log the failed login attempt
-    logAction("unknown", "Failed login attempts exceeded");
-
-    return -1; // Login failed
+    // If 3 failed attempts, log system lockout
+    logAction("System", "User locked out due to multiple failed login attempts.");
+    printf("Too many failed login attempts. Exiting system.\n");
+    return -1;
 }
 
 // Save employees to a file

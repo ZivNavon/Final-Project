@@ -18,7 +18,6 @@ void saveData();
 
 int main() {
     logSystemStart(); // Log system startup
-
     systemStart(); // Initialize system (e.g., create default admin if needed)
     loadData();    // Load data from files into data structures
 
@@ -42,6 +41,8 @@ void systemStart() {
     if (!fp) {
         printf("No employee file found. Creating default admin...\n");
         createDefaultAdmin();
+        //Log missing employee file
+        logAction("System", "Employee file missing. Creating default admin.");
     }
     else {
         fclose(fp);
@@ -51,17 +52,26 @@ void systemStart() {
 void loadData() {
     employees = loadEmployeesFromFile();
     if (employees) {
-        logAction("system", "Employee data loaded successfully");
+        logAction("System", "Employee data loaded successfully");
+    }
+    else {
+        logAction("System", "Error: Failed to load employee data.");
     }
 
     items = loadItemsFromFile("items.dat");
     if (items) {
-        logAction("system", "Item data loaded successfully");
+        logAction("System", "Item data loaded successfully");
+    }
+    else {
+        logAction("System", "Error: Failed to load item data.");
     }
 
     customers = loadCustomersFromFile("customers.txt");
     if (customers) {
-        logAction("system", "Customer data loaded successfully");
+        logAction("System", "Customer data loaded successfully");
+    }
+    else {
+        logAction("System", "Error: Failed to load customer data.");
     }
 }
 
