@@ -1,3 +1,6 @@
+// Ziv Navon | TZ: 207423955     
+// Ofek Iram | TZ: 319089884
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

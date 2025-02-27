@@ -1,4 +1,6 @@
-// items.c
+// Ziv Navon | TZ: 207423955     
+// Ofek Iram | TZ: 319089884
+
 #include "items.h"
 #include "log.h"
 #include <stdio.h>

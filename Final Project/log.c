@@ -1,3 +1,6 @@
+// Ziv Navon | TZ: 207423955     
+// Ofek Iram | TZ: 319089884
+
 #include "log.h"
 #define _CRT_SECURE_NO_WARNINGS
 
